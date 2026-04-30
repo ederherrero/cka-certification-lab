@@ -12,10 +12,9 @@ BRIDGE_IFACE   = CLUSTER.dig('network', 'bridge_interface')
 IP_MODE        = CLUSTER.dig('network', 'ip_mode')
 NAT_ENABLED    = CLUSTER.dig('network', 'nat_enabled')
 HOST_ONLY_BASE = CLUSTER.dig('network', 'host_only_base') || '192.168.99'
-K8S_VERSION    = CLUSTER.dig('kubernetes', 'version')
-POD_CIDR       = CLUSTER.dig('kubernetes', 'pod_cidr')
-SERVICE_CIDR   = CLUSTER.dig('kubernetes', 'service_cidr')
-CNI            = CLUSTER.dig('kubernetes', 'cni')
+K8S_VERSION    = CLUSTER.dig('kubernetes', 'version')  || '1.34'
+POD_CIDR       = CLUSTER.dig('kubernetes', 'pod_cidr')  || '10.244.0.0/16'
+SERVICE_CIDR   = CLUSTER.dig('kubernetes', 'service_cidr') || '10.96.0.0/12'
 CALICO_VERSION = CLUSTER.dig('addons', 'calico', 'version') || '3.30.2'
 
 CONTROL_PLANES = CLUSTER.dig('nodes', 'control_planes') || []
@@ -32,13 +31,10 @@ Vagrant.configure('2') do |config|
   config.ssh.insert_key = false
 
   common_env = {
-    'CLUSTER_NAME'   => CLUSTER_NAME,
     'K8S_VERSION'    => K8S_VERSION,
     'POD_CIDR'       => POD_CIDR,
     'SERVICE_CIDR'   => SERVICE_CIDR,
-    'CNI'            => CNI,
     'CALICO_VERSION' => CALICO_VERSION,
-    'WORKERS'        => WORKERS.length.to_s,
     'HOST_ONLY_BASE' => HOST_ONLY_BASE,
   }
 

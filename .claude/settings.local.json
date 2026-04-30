@@ -1,5 +1,9 @@
 {
   "permissions": {
+    "allow": [
+      "Bash(python lab.py scenario list)",
+      "PowerShell(Rename-Item \"c:\\\\Users\\\\ederh\\\\OneDrive\\\\Documentos\\\\GitHub\\\\cka-certification-lab\\\\lab.py\" \"cka-lab.py\")"
+    ],
     "additionalDirectories": [
       "c:\\Users\\ederh\\.claude\\projects\\c--Users-ederh-OneDrive-Documentos-GitHub-cka-certification-lab\\memory"
     ]

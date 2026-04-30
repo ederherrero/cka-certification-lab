@@ -17,15 +17,11 @@ kubernetes:
   version: "1.34"
   pod_cidr: "10.244.0.0/16"
   service_cidr: "10.96.0.0/12"
-  cni: calico
-  cri: containerd
 
+# Versões dos addons instalados no cluster
 addons:
   calico:
     version: "3.30.2"
-  metrics_server:
-    enabled: false
-    version: "0.7.2"
 
 nodes:
   control_planes:
