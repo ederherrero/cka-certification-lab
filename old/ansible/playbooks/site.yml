@@ -1,0 +1,19 @@
+---
+- name: Kubernetes lab baseline
+  hosts: all
+  become: true
+  roles:
+    - common
+    - kubernetes-common
+
+- name: Control plane tasks
+  hosts: control_plane
+  become: true
+  roles:
+    - control-plane
+
+- name: Worker tasks
+  hosts: workers
+  become: true
+  roles:
+    - worker

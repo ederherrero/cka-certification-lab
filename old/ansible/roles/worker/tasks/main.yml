@@ -1,0 +1,4 @@
+---
+- name: Placeholder worker role
+  ansible.builtin.debug:
+    msg: "Worker-specific tasks will be expanded in the next iteration."

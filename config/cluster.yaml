@@ -1,0 +1,52 @@
+cluster_name: cka-certification-lab
+
+box:
+  name: bento/ubuntu-22.04
+  version: ">= 0"
+
+provider:
+  name: virtualbox
+
+network:
+  bridge_interface: "Intel(R) Ethernet Connection (2) I219-V"
+  nat_enabled: true
+  ip_mode: dhcp
+  host_only_base: "192.168.99"
+
+kubernetes:
+  version: "1.34"
+  pod_cidr: "10.244.0.0/16"
+  service_cidr: "10.96.0.0/12"
+  cni: calico
+  cri: containerd
+
+addons:
+  calico:
+    version: "3.30.2"
+  metrics_server:
+    enabled: false
+    version: "0.7.2"
+
+nodes:
+  control_planes:
+    - name: cp-1
+      cpus: 2
+      memory_mb: 4096
+
+  workers:
+    - name: wk-1
+      cpus: 2
+      memory_mb: 3072
+    - name: wk-2
+      cpus: 2
+      memory_mb: 3072
+    - name: wk-3
+      cpus: 2
+      memory_mb: 3072
+    - name: wk-4
+      cpus: 2
+      memory_mb: 3072
+
+access:
+  export_kubeconfig: true
+  ssh_user: vagrant

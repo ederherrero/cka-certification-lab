@@ -1,0 +1,25 @@
+# ── Vagrant ───────────────────────────────────────────────────────────────────
+# Estado interno das VMs (IDs, snapshots, metadados do VirtualBox)
+.vagrant/
+
+# Comando de join gerado pelo kubeadm init no control plane
+# Contém um token temporário — não deve ser versionado
+vagrant/.join-command
+
+# ── Kubernetes / kubeconfig ───────────────────────────────────────────────────
+# Kubeconfig exportado do cluster — contém credenciais de admin
+output/
+
+# ── Python ────────────────────────────────────────────────────────────────────
+# Cache de bytecode gerado automaticamente pelo Python
+__pycache__/
+*.py[cod]
+
+# Ambientes virtuais
+.venv/
+venv/
+env/
+
+# ── Logs e temporários ────────────────────────────────────────────────────────
+*.log
+*.tmp

@@ -1,0 +1,10 @@
+---
+- name: Disable swap
+  ansible.builtin.command: swapoff -a
+  changed_when: false
+
+- name: Ensure swap entry is commented in fstab
+  ansible.builtin.replace:
+    path: /etc/fstab
+    regexp: '^(.*\sswap\s.*)$'
+    replace: '# \1'

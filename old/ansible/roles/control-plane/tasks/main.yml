@@ -1,0 +1,4 @@
+---
+- name: Placeholder control plane role
+  ansible.builtin.debug:
+    msg: "Control plane-specific tasks will be expanded in the next iteration."

@@ -1,0 +1,11 @@
+---
+- name: Install base packages
+  ansible.builtin.apt:
+    name:
+      - curl
+      - jq
+      - ca-certificates
+      - apt-transport-https
+      - software-properties-common
+    state: present
+    update_cache: true
