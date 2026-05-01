@@ -1,0 +1,95 @@
+# frozen_string_literal: true
+
+require 'yaml'
+
+CONFIG_PATH = File.expand_path('config/cluster.yaml', __dir__)
+CLUSTER     = YAML.load_file(CONFIG_PATH)
+
+CLUSTER_NAME   = CLUSTER['cluster_name']
+BOX_NAME       = CLUSTER.dig('box', 'name')
+BOX_VERSION    = CLUSTER.dig('box', 'version')
+BRIDGE_IFACE   = CLUSTER.dig('network', 'bridge_interface')
+HOST_ONLY_BASE = CLUSTER.dig('network', 'host_only_base') || '192.168.99'
+K8S_VERSION    = CLUSTER.dig('kubernetes', 'version')      || '1.34'
+POD_CIDR       = CLUSTER.dig('kubernetes', 'pod_cidr')     || '10.244.0.0/16'
+SERVICE_CIDR   = CLUSTER.dig('kubernetes', 'service_cidr') || '10.96.0.0/12'
+CALICO_VERSION = CLUSTER.dig('addons', 'calico', 'version') || '3.30.2'
+
+CONTROL_PLANES = CLUSTER.dig('nodes', 'control_planes') || []
+WORKERS        = CLUSTER.dig('nodes', 'workers')        || []
+MANAGER        = CLUSTER['manager'] || {}
+
+CP = CONTROL_PLANES[0]
+
+common_env = {
+  'K8S_VERSION'    => K8S_VERSION,
+  'POD_CIDR'       => POD_CIDR,
+  'SERVICE_CIDR'   => SERVICE_CIDR,
+  'CALICO_VERSION' => CALICO_VERSION,
+  'HOST_ONLY_BASE' => HOST_ONLY_BASE,
+  'CLUSTER_NAME'   => CLUSTER_NAME,
+}
+
+Vagrant.configure('2') do |config|
+  config.vm.box          = BOX_NAME
+  config.vm.box_version  = BOX_VERSION
+  config.ssh.insert_key  = false
+  config.vm.boot_timeout = 600
+
+  # ── Control plane ──────────────────────────────────────────────
+  config.vm.define CP['name'] do |node|
+    node.vm.hostname = "#{CLUSTER_NAME}-#{CP['name']}"
+    node.vm.network 'private_network', ip: "#{HOST_ONLY_BASE}.10"
+    node.vm.network 'public_network',  bridge: BRIDGE_IFACE
+
+    node.vm.provider 'virtualbox' do |vb|
+      vb.name         = "#{CLUSTER_NAME}-#{CP['name']}"
+      vb.cpus         = CP['cpus']      || 2
+      vb.memory       = CP['memory_mb'] || 2048
+      vb.linked_clone = true
+    end
+
+    node.vm.provision 'shell', path: 'scripts/bootstrap-common.sh',        env: common_env
+    node.vm.provision 'shell', path: 'scripts/bootstrap-control-plane.sh', env: common_env
+  end
+
+  # ── Workers ────────────────────────────────────────────────────
+  WORKERS.each_with_index do |wk, i|
+    config.vm.define wk['name'] do |node|
+      node.vm.hostname = "#{CLUSTER_NAME}-#{wk['name']}"
+      node.vm.network 'private_network', ip: "#{HOST_ONLY_BASE}.#{11 + i}"
+      node.vm.network 'public_network',  bridge: BRIDGE_IFACE
+
+      node.vm.provider 'virtualbox' do |vb|
+        vb.name         = "#{CLUSTER_NAME}-#{wk['name']}"
+        vb.cpus         = wk['cpus']      || 2
+        vb.memory       = wk['memory_mb'] || 3072
+        vb.linked_clone = true
+      end
+
+      env = common_env.merge('NODE_INDEX' => (i + 1).to_s)
+      node.vm.provision 'shell', path: 'scripts/bootstrap-common.sh',  env: env
+      node.vm.provision 'shell', path: 'scripts/bootstrap-worker.sh',  env: env
+    end
+  end
+
+  # ── Manager VM ─────────────────────────────────────────────────
+  config.vm.define 'manager' do |node|
+    node.vm.hostname = "#{CLUSTER_NAME}-manager"
+    node.vm.network 'private_network',  ip: "#{HOST_ONLY_BASE}.20"
+    node.vm.network 'public_network',   bridge: BRIDGE_IFACE
+    node.vm.network 'forwarded_port',   guest: 8080, host: MANAGER['port'] || 8080,
+                                        host_ip: '127.0.0.1'
+    node.vm.network 'forwarded_port',   guest: 7681, host: 7681,
+                                        host_ip: '127.0.0.1'
+
+    node.vm.provider 'virtualbox' do |vb|
+      vb.name         = "#{CLUSTER_NAME}-manager"
+      vb.cpus         = MANAGER['cpus']      || 1
+      vb.memory       = MANAGER['memory_mb'] || 1024
+      vb.linked_clone = true
+    end
+
+    node.vm.provision 'shell', path: 'scripts/bootstrap-manager.sh', env: common_env
+  end
+end

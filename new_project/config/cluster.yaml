@@ -1,4 +1,4 @@
-cluster_name: cka-certification-lab
+cluster_name: cka-lab
 
 box:
   name: bento/ubuntu-22.04
@@ -9,8 +9,6 @@ provider:
 
 network:
   bridge_interface: "Intel(R) Ethernet Connection (2) I219-V"
-  nat_enabled: true
-  ip_mode: dhcp
   host_only_base: "192.168.99"
 
 kubernetes:
@@ -18,7 +16,6 @@ kubernetes:
   pod_cidr: "10.244.0.0/16"
   service_cidr: "10.96.0.0/12"
 
-# Versões dos addons instalados no cluster
 addons:
   calico:
     version: "3.30.2"
@@ -40,6 +37,7 @@ nodes:
       cpus: 2
       memory_mb: 3072
 
-access:
-  export_kubeconfig: true
-  ssh_user: vagrant
+manager:
+  cpus: 1
+  memory_mb: 1024
+  port: 8080

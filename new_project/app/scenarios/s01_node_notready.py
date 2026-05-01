@@ -15,24 +15,24 @@ DESCRIPTION = """\
 ║  Um node do cluster está com status NotReady.                    ║
 ║                                                                  ║
 ║  TAREFA                                                          ║
-║  Identifique por que o node cka-certification-lab-wk-2 está      ║
-║  NotReady e corrija o problema para que ele volte ao status Ready.║
+║  Identifique por que o node cka-lab-wk-2 está NotReady           ║
+║  e corrija o problema para que ele volte ao status Ready.        ║
 ║                                                                  ║
 ║  Dica: comece com kubectl get nodes e kubectl describe node.     ║
 ╚══════════════════════════════════════════════════════════════════╝"""
 
 HINT = """\
-Dica 1: Execute 'kubectl describe node cka-certification-lab-wk-2' e
-        leia a seção Conditions.
+Dica 1: Execute 'kubectl describe node cka-lab-wk-2' e leia a seção Conditions.
 
-Dica 2: Acesse o node via 'cd vagrant && vagrant ssh wk-2'.
+Dica 2: Acesse o node via SSH:
+        ssh -i /home/vagrant/.ssh/lab_key vagrant@192.168.99.12
 
 Dica 3: Dentro do node, verifique o kubelet:
         systemctl status kubelet
         journalctl -u kubelet -n 30
 
-Dica 4: Se o kubelet estiver parado, inicie-o:
-        sudo systemctl start kubelet"""
+Dica 4: Se o kubelet estiver parado, habilite e inicie:
+        sudo systemctl enable kubelet && sudo systemctl start kubelet"""
 
 
 def deploy() -> tuple:

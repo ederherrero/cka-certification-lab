@@ -178,7 +178,7 @@ def cmd_down(_args) -> None:
     info(f"Desligando: {', '.join(running)}")
     vagrant_run("halt")
     ok("VMs desligadas. Os dados foram preservados.")
-    info("Para ligar novamente: python lab.py up")
+    info("Para ligar novamente: python cka-lab.py up")
 
 
 def cmd_destroy(args) -> None:
@@ -551,17 +551,17 @@ def _sc_list() -> None:
 
     print("  Dificuldade:  [  ] iniciante   [ *] intermediário   [**] avançado\n")
     info("Comandos:")
-    info("  python lab.py scenario deploy <id>   — implanta o cenário")
-    info("  python lab.py scenario verify <id>   — verifica sua solução")
-    info("  python lab.py scenario hint   <id>   — exibe uma dica")
-    info("  python lab.py scenario reset  <id>   — desfaz o cenário")
+    info("  python cka-lab.py scenario deploy <id>   — implanta o cenário")
+    info("  python cka-lab.py scenario verify <id>   — verifica sua solução")
+    info("  python cka-lab.py scenario hint   <id>   — exibe uma dica")
+    info("  python cka-lab.py scenario reset  <id>   — desfaz o cenário")
     print()
 
 
 def _sc_action(sid: str, action: str) -> None:
     mod = _find_scenario(sid)
     if not mod:
-        error(f"Cenário '{sid}' não encontrado. Use 'python lab.py scenario list'.")
+        error(f"Cenário '{sid}' não encontrado. Use 'python cka-lab.py scenario list'.")
         sys.exit(1)
 
     m = mod.METADATA
@@ -585,7 +585,7 @@ def _sc_action(sid: str, action: str) -> None:
             ok(msg)
             print()
             warn("Resolva o problema descrito acima.")
-            info(f"Quando terminar: python lab.py scenario verify {m['id']}")
+            info(f"Quando terminar: python cka-lab.py scenario verify {m['id']}")
         else:
             error(f"Falha ao implantar: {msg}")
             sys.exit(1)
@@ -596,10 +596,10 @@ def _sc_action(sid: str, action: str) -> None:
         print()
         if success:
             ok(f"CORRETO! {msg}")
-            info(f"Desfaça o cenário quando quiser: python lab.py scenario reset {m['id']}")
+            info(f"Desfaça o cenário quando quiser: python cka-lab.py scenario reset {m['id']}")
         else:
             error(f"Ainda não está correto: {msg}")
-            info(f"Precisa de ajuda? python lab.py scenario hint {m['id']}")
+            info(f"Precisa de ajuda? python cka-lab.py scenario hint {m['id']}")
 
     elif action == "reset":
         info("Desfazendo cenário...")

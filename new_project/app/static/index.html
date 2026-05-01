@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CKA Lab</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <span class="logo-icon">⎈</span>
+      <span class="logo-text">CKA Lab</span>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="progressFill"></div>
+      </div>
+      <span class="progress-label" id="progressLabel">0 / 20</span>
+    </div>
+    <div class="score-badge" id="scoreBadge">0 pts</div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <input type="text" id="searchInput" placeholder="Buscar cenário..." />
+      </div>
+      <div id="scenarioList"></div>
+    </aside>
+
+    <main class="content">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">⎈</div>
+        <h2>Selecione um cenário</h2>
+        <p>Escolha um cenário na lista à esquerda para começar.</p>
+      </div>
+
+      <div class="scenario-panel" id="scenarioPanel" style="display:none">
+
+        <!-- Cabeçalho do cenário -->
+        <div class="scenario-header">
+          <div class="scenario-meta">
+            <span class="scenario-id" id="panelId"></span>
+            <span class="scenario-category" id="panelCategory"></span>
+            <span class="difficulty-badge" id="panelDifficulty"></span>
+            <span class="status-chip" id="statusChip">Não iniciado</span>
+            <span class="lab-ref" id="panelLabRef"></span>
+          </div>
+          <h1 class="scenario-title" id="panelTitle"></h1>
+        </div>
+
+        <!-- Botões acima da descrição -->
+        <div class="action-buttons">
+          <button class="btn btn-deploy" id="btnDeploy" onclick="runAction('deploy')">▶ Deploy</button>
+          <button class="btn btn-verify" id="btnVerify" onclick="runAction('verify')">✓ Verificar</button>
+          <button class="btn btn-hint"   id="btnHint"   onclick="runAction('hint')">💡 Dica</button>
+          <button class="btn btn-reset"  id="btnReset"  onclick="runAction('reset')">↺ Reset</button>
+        </div>
+
+        <!-- Descrição (aparece após deploy) -->
+        <div class="description-box" id="descriptionBox" style="display:none">
+          <pre id="descriptionText"></pre>
+        </div>
+
+        <!-- Dois painéis lado a lado -->
+        <div class="panels">
+
+          <!-- Painel esquerdo: output das ações -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">● output</span>
+              <button class="panel-btn" onclick="clearTerminal()">limpar</button>
+            </div>
+            <div class="terminal-body" id="terminalBody">
+              <span class="terminal-placeholder">Clique em Deploy para iniciar o cenário.</span>
+            </div>
+          </div>
+
+          <!-- Painel direito: terminal interativo (ttyd) -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">⌨ terminal</span>
+              <button class="panel-btn" onclick="reloadTerm()">reconectar</button>
+            </div>
+            <iframe id="termFrame" src="http://localhost:7681" frameborder="0"></iframe>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
