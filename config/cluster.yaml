@@ -27,7 +27,7 @@ nodes:
   control_planes:
     - name: cp-1
       cpus: 2
-      memory_mb: 4096
+      memory_mb: 2048
 
   workers:
     - name: wk-1
@@ -37,9 +37,6 @@ nodes:
       cpus: 2
       memory_mb: 3072
     - name: wk-3
-      cpus: 2
-      memory_mb: 3072
-    - name: wk-4
       cpus: 2
       memory_mb: 3072
 

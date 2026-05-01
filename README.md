@@ -57,7 +57,7 @@ O `kubectl` acessa o cluster pelo IP host-only (`192.168.99.10`), que é estáti
 | CPU | 4 cores com VT-x/AMD-V | 8+ cores |
 | Disco livre | 60 GB | 100 GB |
 
-> A configuração padrão (1 control plane + 4 workers) reserva ~16 GB de RAM.
+> A configuração padrão (1 control plane + 3 workers) reserva ~11 GB de RAM.
 
 ---
 
@@ -146,9 +146,6 @@ nodes:
       cpus: 2
       memory_mb: 3072
     - name: wk-3
-      cpus: 2
-      memory_mb: 3072
-    - name: wk-4
       cpus: 2
       memory_mb: 3072
 
