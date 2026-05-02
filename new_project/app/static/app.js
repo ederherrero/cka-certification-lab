@@ -1,6 +1,6 @@
 'use strict';
 
-// ── State ────────────────────────────────────────────────────────
+// ── State ─────────────────────────────────────────────────────────
 let scenarios = [];
 let activeId  = null;
 let ws        = null;
@@ -8,10 +8,11 @@ let busy      = false;
 
 const SCORE_PER_SCENARIO = 10;
 
-// ── Boot ─────────────────────────────────────────────────────────
+// ── Boot ──────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   loadScenarios();
   document.getElementById('searchInput').addEventListener('input', renderSidebar);
+  initFloat();
 });
 
 // ── Data fetching ─────────────────────────────────────────────────
@@ -30,10 +31,7 @@ async function loadScenarios() {
 async function loadProgress() {
   const res  = await fetch('/api/progress');
   const data = await res.json();
-  // Atualiza status local
-  scenarios.forEach(s => {
-    s.status = data.progress[s.id] || 'idle';
-  });
+  scenarios.forEach(s => { s.status = data.progress[s.id] || 'idle'; });
   renderSidebar();
   updateProgress();
 }
@@ -100,16 +98,16 @@ async function selectScenario(id) {
   activeId = id;
   renderSidebar();
 
-  document.getElementById('emptyState').style.display  = 'none';
+  document.getElementById('emptyState').style.display    = 'none';
   document.getElementById('scenarioPanel').style.display = '';
 
   const res  = await fetch(`/api/scenarios/${id}`);
   const data = await res.json();
 
-  document.getElementById('panelId').textContent         = data.id;
-  document.getElementById('panelCategory').textContent   = data.category;
-  document.getElementById('panelTitle').textContent      = data.title;
-  document.getElementById('panelLabRef').textContent     = data.lab_ref || '';
+  document.getElementById('panelId').textContent       = data.id;
+  document.getElementById('panelCategory').textContent = data.category;
+  document.getElementById('panelTitle').textContent    = data.title;
+  document.getElementById('panelLabRef').textContent   = data.lab_ref || '';
 
   const diff = document.getElementById('panelDifficulty');
   diff.textContent = diffLabel(data.difficulty);
@@ -118,16 +116,18 @@ async function selectScenario(id) {
   updateStatusChip(data.status);
   clearTerminal();
 
+  const descEl = document.getElementById('descriptionText');
   if (data.status === 'deployed' || data.status === 'verified') {
-    document.getElementById('descriptionBox').style.display = '';
-    document.getElementById('descriptionText').textContent  = data.description;
+    descEl.textContent = data.description;
+    descEl.classList.remove('desc-empty');
   } else {
-    document.getElementById('descriptionBox').style.display = 'none';
+    descEl.textContent = '';
+    descEl.classList.add('desc-empty');
   }
 }
 
 function updateStatusChip(status) {
-  const chip = document.getElementById('statusChip');
+  const chip   = document.getElementById('statusChip');
   const labels = { idle: 'Não iniciado', deployed: 'Em andamento', verified: 'Concluído ✓' };
   chip.textContent = labels[status] || status;
   chip.className   = `status-chip ${status}`;
@@ -139,33 +139,25 @@ function runAction(action) {
   busy = true;
   setButtonsDisabled(true);
 
-  const body = document.getElementById('terminalBody');
-  body.innerHTML = '';
-  appendLog('info', `Executando: ${action}...`);
+  clearTerminal();
+  appendLog('info', `Executando: ${action}…`);
 
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
   ws = new WebSocket(`${proto}://${location.host}/ws/${activeId}/${action}`);
 
   ws.onmessage = (evt) => {
     const msg = JSON.parse(evt.data);
-
     switch (msg.type) {
-      case 'info':
-        appendLog('info', msg.msg);
+      case 'info':  appendLog('info', msg.msg); break;
+      case 'ok':    appendLog('ok',  `[ok] ${msg.msg}`); break;
+      case 'error': appendLog('error', `[erro] ${msg.msg}`); break;
+      case 'hint':  appendLog('hint', msg.msg); break;
+      case 'description': {
+        const el = document.getElementById('descriptionText');
+        el.textContent = msg.msg;
+        el.classList.remove('desc-empty');
         break;
-      case 'ok':
-        appendLog('ok', `[ok] ${msg.msg}`);
-        break;
-      case 'error':
-        appendLog('error', `[erro] ${msg.msg}`);
-        break;
-      case 'hint':
-        appendLog('hint', msg.msg);
-        break;
-      case 'description':
-        document.getElementById('descriptionText').textContent = msg.msg;
-        document.getElementById('descriptionBox').style.display = '';
-        break;
+      }
       case 'done':
         busy = false;
         setButtonsDisabled(false);
@@ -178,40 +170,27 @@ function runAction(action) {
     }
   };
 
-  ws.onerror = () => {
-    appendLog('error', 'Erro na conexão WebSocket.');
-    busy = false;
-    setButtonsDisabled(false);
-  };
-
-  ws.onclose = () => {
-    busy = false;
-    setButtonsDisabled(false);
-  };
+  ws.onerror = () => { appendLog('error', 'Erro na conexão WebSocket.'); busy = false; setButtonsDisabled(false); };
+  ws.onclose = () => { busy = false; setButtonsDisabled(false); };
 }
 
-// ── Terminal helpers ──────────────────────────────────────────────
+// ── Output helpers ────────────────────────────────────────────────
 function appendLog(type, text) {
   const body = document.getElementById('terminalBody');
   const line = document.createElement('div');
   line.className = `log-${type}`;
-
   if (type === 'hint') {
     line.innerHTML = '<strong>💡 Dica:</strong><br>' + escHtml(text);
-  } else if (type === 'description') {
-    line.className = 'log-desc';
-    line.textContent = text;
   } else {
     line.textContent = text;
   }
-
   body.appendChild(line);
   body.scrollTop = body.scrollHeight;
 }
 
 function clearTerminal() {
   document.getElementById('terminalBody').innerHTML =
-    '<span class="terminal-placeholder">Clique em Deploy para iniciar o cenário.</span>';
+    '<span class="terminal-placeholder">Aguardando ação…</span>';
 }
 
 function escHtml(str) {
@@ -223,20 +202,127 @@ function updateProgress() {
   const total    = scenarios.length;
   const verified = scenarios.filter(s => s.status === 'verified').length;
   const pct      = total ? (verified / total) * 100 : 0;
-
-  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressFill').style.width  = pct + '%';
   document.getElementById('progressLabel').textContent = `${verified} / ${total}`;
   document.getElementById('scoreBadge').textContent    = `${verified * SCORE_PER_SCENARIO} pts`;
+}
+
+function setButtonsDisabled(disabled) {
+  ['btnDeploy','btnVerify','btnHint','btnReset'].forEach(id => {
+    document.getElementById(id).disabled = disabled;
+  });
+}
+
+// ── Janela flutuante ──────────────────────────────────────────────
+let floatMin = false;
+let floatMax = false;
+let savedPos = {};
+
+function initFloat() {
+  const win   = document.getElementById('termFloat');
+  const hdr   = document.getElementById('termDragHandle');
+  const rsz   = document.getElementById('termResizeHandle');
+  const frame = document.getElementById('termFrame');
+
+  let dragging = false, resizing = false;
+  let ox = 0, oy = 0, rsx = 0, rsy = 0, rsw = 0, rsh = 0;
+
+  function snapToPixels() {
+    // Substitui transform CSS por coordenadas absolutas
+    if (win.style.transform !== 'none') {
+      const r = win.getBoundingClientRect();
+      win.style.left      = r.left + 'px';
+      win.style.top       = r.top  + 'px';
+      win.style.transform = 'none';
+    }
+  }
+
+  // ── Arrastar ──
+  hdr.addEventListener('mousedown', e => {
+    if (floatMax || e.target.classList.contains('dot') || e.target.classList.contains('float-btn')) return;
+    dragging = true;
+    snapToPixels();
+    ox = e.clientX - win.offsetLeft;
+    oy = e.clientY - win.offsetTop;
+    frame.style.pointerEvents = 'none'; // evita que o iframe consuma o mouse
+    e.preventDefault();
+  });
+
+  // ── Redimensionar ──
+  rsz.addEventListener('mousedown', e => {
+    resizing = true;
+    snapToPixels();
+    rsx = e.clientX; rsy = e.clientY;
+    rsw = win.offsetWidth; rsh = win.offsetHeight;
+    frame.style.pointerEvents = 'none';
+    e.preventDefault(); e.stopPropagation();
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (dragging) {
+      win.style.left = Math.max(0, Math.min(window.innerWidth  - 100, e.clientX - ox)) + 'px';
+      win.style.top  = Math.max(0, Math.min(window.innerHeight - 36,  e.clientY - oy)) + 'px';
+    }
+    if (resizing) {
+      win.style.width  = Math.max(320, rsw + e.clientX - rsx) + 'px';
+      win.style.height = Math.max(160, rsh + e.clientY - rsy) + 'px';
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (dragging || resizing) frame.style.pointerEvents = '';
+    dragging = false;
+    resizing = false;
+  });
+
+  // Duplo clique na barra: toggle minimizar
+  hdr.addEventListener('dblclick', () => floatMinimize());
+}
+
+function floatMinimize() {
+  floatMin = !floatMin;
+  document.getElementById('termFloat').classList.toggle('float-minimized', floatMin);
+}
+
+function floatMaximize() {
+  const win     = document.getElementById('termFloat');
+  const sidebar = document.querySelector('.sidebar');
+  const headerH = document.querySelector('header').offsetHeight;
+
+  if (!floatMax) {
+    const r = win.getBoundingClientRect();
+    savedPos = {
+      left: win.style.left, top: win.style.top,
+      width: win.style.width, height: win.style.height,
+      transform: win.style.transform,
+    };
+    const sw = sidebar.offsetWidth;
+    win.style.transform = 'none';
+    win.style.left      = sw + 'px';
+    win.style.top       = headerH + 'px';
+    win.style.width     = (window.innerWidth  - sw) + 'px';
+    win.style.height    = (window.innerHeight - headerH) + 'px';
+    floatMax = true;
+    win.classList.add('float-maximized');
+  } else {
+    floatRestore();
+  }
+}
+
+function floatRestore() {
+  const win = document.getElementById('termFloat');
+  if (floatMax && savedPos.left) {
+    Object.assign(win.style, savedPos);
+  } else {
+    // Volta ao padrão CSS
+    win.style.cssText = '';
+  }
+  floatMax = false;
+  floatMin = false;
+  win.classList.remove('float-maximized', 'float-minimized');
 }
 
 function reloadTerm() {
   const f = document.getElementById('termFrame');
   f.src = f.src;
-}
-
-// ── UI helpers ────────────────────────────────────────────────────
-function setButtonsDisabled(disabled) {
-  ['btnDeploy','btnVerify','btnHint','btnReset'].forEach(id => {
-    document.getElementById(id).disabled = disabled;
-  });
 }

@@ -38,57 +38,61 @@
 
       <div class="scenario-panel" id="scenarioPanel" style="display:none">
 
-        <!-- Cabeçalho do cenário -->
-        <div class="scenario-header">
-          <div class="scenario-meta">
-            <span class="scenario-id" id="panelId"></span>
-            <span class="scenario-category" id="panelCategory"></span>
-            <span class="difficulty-badge" id="panelDifficulty"></span>
-            <span class="status-chip" id="statusChip">Não iniciado</span>
-            <span class="lab-ref" id="panelLabRef"></span>
-          </div>
-          <h1 class="scenario-title" id="panelTitle"></h1>
-        </div>
-
-        <!-- Botões acima da descrição -->
-        <div class="action-buttons">
-          <button class="btn btn-deploy" id="btnDeploy" onclick="runAction('deploy')">▶ Deploy</button>
-          <button class="btn btn-verify" id="btnVerify" onclick="runAction('verify')">✓ Verificar</button>
-          <button class="btn btn-hint"   id="btnHint"   onclick="runAction('hint')">💡 Dica</button>
-          <button class="btn btn-reset"  id="btnReset"  onclick="runAction('reset')">↺ Reset</button>
-        </div>
-
-        <!-- Descrição (aparece após deploy) -->
-        <div class="description-box" id="descriptionBox" style="display:none">
-          <pre id="descriptionText"></pre>
-        </div>
-
-        <!-- Dois painéis lado a lado -->
-        <div class="panels">
-
-          <!-- Painel esquerdo: output das ações -->
-          <div class="panel">
-            <div class="panel-header">
-              <span class="panel-title">● output</span>
-              <button class="panel-btn" onclick="clearTerminal()">limpar</button>
+        <!-- Barra de controle: info + botões -->
+        <div class="scenario-bar">
+          <div class="bar-info">
+            <div class="scenario-meta">
+              <span class="scenario-id" id="panelId"></span>
+              <span class="scenario-category" id="panelCategory"></span>
+              <span class="difficulty-badge" id="panelDifficulty"></span>
+              <span class="status-chip" id="statusChip">Não iniciado</span>
+              <span class="lab-ref" id="panelLabRef"></span>
             </div>
-            <div class="terminal-body" id="terminalBody">
-              <span class="terminal-placeholder">Clique em Deploy para iniciar o cenário.</span>
-            </div>
+            <h1 class="scenario-title" id="panelTitle"></h1>
           </div>
-
-          <!-- Painel direito: terminal interativo (ttyd) -->
-          <div class="panel">
-            <div class="panel-header">
-              <span class="panel-title">⌨ terminal</span>
-              <button class="panel-btn" onclick="reloadTerm()">reconectar</button>
-            </div>
-            <iframe id="termFrame" src="http://localhost:7681" frameborder="0"></iframe>
+          <div class="action-buttons">
+            <button class="btn btn-deploy" id="btnDeploy" onclick="runAction('deploy')">▶ Deploy</button>
+            <button class="btn btn-verify" id="btnVerify" onclick="runAction('verify')">✓ Verificar</button>
+            <button class="btn btn-hint"   id="btnHint"   onclick="runAction('hint')">💡 Dica</button>
+            <button class="btn btn-reset"  id="btnReset"  onclick="runAction('reset')">↺ Reset</button>
           </div>
-
         </div>
+
+        <!-- Descrição do cenário (aparece após deploy) -->
+        <div class="description-box" id="descriptionBox">
+          <pre id="descriptionText" class="desc-empty"></pre>
+        </div>
+
+        <!-- Painel de output -->
+        <div class="output-panel">
+          <div class="output-hdr">
+            <span class="lbl">● output</span>
+            <button class="panel-btn" onclick="clearTerminal()">limpar</button>
+          </div>
+          <div class="terminal-body" id="terminalBody">
+            <span class="terminal-placeholder">Clique em Deploy para iniciar o cenário.</span>
+          </div>
+        </div>
+
       </div>
     </main>
+  </div>
+
+  <!-- Janela flutuante do terminal -->
+  <div id="termFloat">
+    <div class="float-hdr" id="termDragHandle">
+      <div class="float-dots">
+        <span class="dot dot-red"    title="Minimizar"  onclick="floatMinimize()"></span>
+        <span class="dot dot-yellow" title="Restaurar"  onclick="floatRestore()"></span>
+        <span class="dot dot-green"  title="Maximizar"  onclick="floatMaximize()"></span>
+      </div>
+      <span class="float-title">⌨ terminal interativo</span>
+      <button class="float-btn" onclick="reloadTerm()" title="Reconectar">↺</button>
+    </div>
+    <div class="float-body">
+      <iframe id="termFrame" src="http://localhost:7681" frameborder="0"></iframe>
+      <div class="float-resize" id="termResizeHandle"></div>
+    </div>
   </div>
 
   <script src="/static/app.js"></script>

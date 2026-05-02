@@ -63,8 +63,37 @@ for i in 10 11 12 13; do
 done
 chown vagrant:vagrant /home/vagrant/.ssh/known_hosts
 
+echo "[manager] Criando SSH config para acesso por nome aos nodes..."
+cat > /home/vagrant/.ssh/config <<EOF
+Host cp-1
+  HostName ${HOST_ONLY_BASE}.10
+  User vagrant
+  IdentityFile ~/.ssh/lab_key
+  StrictHostKeyChecking no
+
+Host wk-1
+  HostName ${HOST_ONLY_BASE}.11
+  User vagrant
+  IdentityFile ~/.ssh/lab_key
+  StrictHostKeyChecking no
+
+Host wk-2
+  HostName ${HOST_ONLY_BASE}.12
+  User vagrant
+  IdentityFile ~/.ssh/lab_key
+  StrictHostKeyChecking no
+
+Host wk-3
+  HostName ${HOST_ONLY_BASE}.13
+  User vagrant
+  IdentityFile ~/.ssh/lab_key
+  StrictHostKeyChecking no
+EOF
+chmod 600 /home/vagrant/.ssh/config
+chown vagrant:vagrant /home/vagrant/.ssh/config
+
 echo "[manager] Criando perfil do terminal interativo..."
-cat > /home/vagrant/.ttyd_profile <<'PROFILE'
+cat > /home/vagrant/.ttyd_profile <<PROFILE
 export KUBECONFIG=/home/vagrant/.kube/config
 export PS1='\[\033[01;36m\]cka-lab\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
 alias k=kubectl
@@ -73,10 +102,28 @@ alias kgp='kubectl get pods -A'
 
 clear
 printf '\033[1;36m'
-echo '╔══════════════════════════════════════════════╗'
-echo '║   CKA Lab — Terminal Interativo              ║'
-echo '║   kubectl, ssh e alias k=kubectl prontos     ║'
-echo '╚══════════════════════════════════════════════╝'
+echo '╔══════════════════════════════════════════════════════════╗'
+echo '║   CKA Lab — Terminal Interativo                         ║'
+echo '╠══════════════════════════════════════════════════════════╣'
+echo '║  kubectl:   k  kgn  kgp                                 ║'
+echo '║                                                         ║'
+echo '║  SSH nos nodes (sem IP, sem senha):                     ║'
+echo '║    ssh cp-1   ssh wk-1   ssh wk-2   ssh wk-3            ║'
+echo '║                                                         ║'
+echo '║  Aliases úteis:                                         ║'
+echo '║    k         → kubectl                                  ║'
+echo '║    kgn       → kubectl get nodes                        ║'
+echo '║    kgp       → kubectl get pods -A                      ║'
+echo '║                                                         ║'
+echo '║  Conectar nos nodes via SSH:                            ║'
+printf "║    ssh-cp1   → cp-1   (%s.10)              ║\n" "${HOST_ONLY_BASE}"
+printf "║    ssh-wk1   → wk-1   (%s.11)              ║\n" "${HOST_ONLY_BASE}"
+printf "║    ssh-wk2   → wk-2   (%s.12)              ║\n" "${HOST_ONLY_BASE}"
+printf "║    ssh-wk3   → wk-3   (%s.13)              ║\n" "${HOST_ONLY_BASE}"
+echo '║                                                         ║'
+echo '║  Ou diretamente:                                        ║'
+printf "║    ssh -i ~/.ssh/lab_key vagrant@%s.<N>    ║\n" "${HOST_ONLY_BASE}"
+echo '╚══════════════════════════════════════════════════════════╝'
 printf '\033[0m\n'
 kubectl get nodes
 echo ''
