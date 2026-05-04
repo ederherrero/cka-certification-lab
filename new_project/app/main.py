@@ -4,6 +4,7 @@ import asyncio
 import importlib.util
 import json
 import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -132,6 +133,60 @@ def reset_all_progress():
     if PROGRESS_FILE.exists():
         PROGRESS_FILE.write_text("{}")
     return {"ok": True}
+
+
+@app.post("/api/cluster/suspend")
+def cluster_suspend():
+    from scenarios.helpers import vssh
+    results = []
+    for node in ["cp-1", "wk-1", "wk-2", "wk-3"]:
+        r = vssh(node, "sudo sh -c 'sleep 2 && poweroff &'")
+        results.append({
+            "node": node,
+            "ok": r.returncode == 0,
+            "error": r.stderr.strip() if r.returncode != 0 else "",
+        })
+    return {"results": results}
+
+
+@app.get("/api/cluster/health")
+def cluster_health():
+    env = {**os.environ, "KUBECONFIG": "/home/vagrant/.kube/config"}
+    try:
+        r = subprocess.run(
+            ["kubectl", "get", "nodes", "-o", "json"],
+            capture_output=True, text=True, timeout=10, env=env,
+        )
+        if r.returncode != 0:
+            return {"status": "unreachable", "nodes": [], "error": r.stderr.strip()}
+
+        data = json.loads(r.stdout)
+        nodes = []
+        for item in data.get("items", []):
+            name   = item["metadata"]["name"]
+            labels = item["metadata"].get("labels", {})
+            role   = "control-plane" if "node-role.kubernetes.io/control-plane" in labels else "worker"
+            ready  = "Unknown"
+            for cond in item.get("status", {}).get("conditions", []):
+                if cond["type"] == "Ready":
+                    ready = "True" if cond["status"] == "True" else "False"
+                    break
+            version = item.get("status", {}).get("nodeInfo", {}).get("kubeletVersion", "")
+            nodes.append({"name": name, "role": role, "ready": ready, "version": version})
+
+        all_ready = all(n["ready"] == "True" for n in nodes)
+        any_ready = any(n["ready"] == "True" for n in nodes)
+        status = "online" if all_ready else ("degraded" if any_ready else "offline")
+        return {"status": status, "nodes": nodes}
+
+    except subprocess.TimeoutExpired:
+        return {
+            "status": "starting",
+            "nodes": [],
+            "error": "API server não respondeu. Cluster pode estar iniciando após suspensão.",
+        }
+    except Exception as exc:
+        return {"status": "unreachable", "nodes": [], "error": str(exc)}
 
 
 # ---------------------------------------------------------------------------

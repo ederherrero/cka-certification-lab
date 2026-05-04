@@ -18,6 +18,7 @@
       </div>
       <span class="progress-label" id="progressLabel">0 / 20</span>
     </div>
+    <button class="cluster-nav-btn" id="clusterNavBtn" onclick="toggleClusterView()">⬡ Cluster</button>
     <div class="score-badge" id="scoreBadge">0 pts</div>
   </header>
 
@@ -30,6 +31,25 @@
     </aside>
 
     <main class="content">
+      <!-- Painel de saúde do cluster -->
+      <div class="cluster-panel" id="clusterPanel" style="display:none">
+        <div class="cluster-status-bar" id="clusterStatusBar">
+          <span class="spinner" id="clusterSpinner" style="display:none"></span>
+          <span id="clusterStatusText">Verificando...</span>
+          <span class="cluster-refresh-info" id="clusterRefreshInfo"></span>
+          <button class="panel-btn" onclick="refreshCluster()">↺ Atualizar</button>
+        </div>
+        <div class="node-grid" id="nodeGrid"></div>
+        <div class="cluster-actions">
+          <button class="btn btn-suspend" id="btnSuspend" onclick="suspendCluster()">⏸ Suspender Nodes</button>
+          <div class="cluster-tip">
+            Desliga cp-1, wk-1, wk-2, wk-3 via SSH. Depois feche o VirtualBox (ou suspend o manager).<br>
+            Para retomar: execute <code>iniciar-lab.bat</code> na pasta do projeto, ou rode
+            <code>vagrant up</code> no terminal do Windows.
+          </div>
+        </div>
+      </div>
+
       <div class="empty-state" id="emptyState">
         <div class="empty-icon">⎈</div>
         <h2>Selecione um cenário</h2>

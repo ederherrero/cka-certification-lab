@@ -54,7 +54,7 @@ spec:
     command: ["stress", "--vm", "1", "--vm-bytes", "90M", "--vm-hang", "1"]
     resources:
       requests:
-        memory: "50Mi"
+        memory: "20Mi"
       limits:
         memory: "30Mi"
 """

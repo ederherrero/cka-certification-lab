@@ -13,7 +13,7 @@ apt-get install -y -qq python3 python3-pip python3-venv curl openssh-client git
 
 echo "[manager] Instalando kubectl..."
 curl -fsSL "https://pkgs.k8s.io/core:/stable:/v1.34/deb/Release.key" \
-  | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+  | gpg --batch --yes --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] \
   https://pkgs.k8s.io/core:/stable:/v1.34/deb/ /" \
   > /etc/apt/sources.list.d/kubernetes.list
@@ -22,6 +22,7 @@ apt-get install -y -qq kubectl
 apt-mark hold kubectl
 
 echo "[manager] Instalando ttyd (terminal web)..."
+systemctl stop cka-terminal 2>/dev/null || true
 curl -fsSL https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64 \
   -o /usr/local/bin/ttyd
 chmod +x /usr/local/bin/ttyd
@@ -103,26 +104,26 @@ alias kgp='kubectl get pods -A'
 clear
 printf '\033[1;36m'
 echo '╔══════════════════════════════════════════════════════════╗'
-echo '║   CKA Lab — Terminal Interativo                         ║'
+echo '║   CKA Lab — Terminal Interativo                          ║'
 echo '╠══════════════════════════════════════════════════════════╣'
-echo '║  kubectl:   k  kgn  kgp                                 ║'
-echo '║                                                         ║'
-echo '║  SSH nos nodes (sem IP, sem senha):                     ║'
-echo '║    ssh cp-1   ssh wk-1   ssh wk-2   ssh wk-3            ║'
-echo '║                                                         ║'
-echo '║  Aliases úteis:                                         ║'
-echo '║    k         → kubectl                                  ║'
-echo '║    kgn       → kubectl get nodes                        ║'
-echo '║    kgp       → kubectl get pods -A                      ║'
-echo '║                                                         ║'
-echo '║  Conectar nos nodes via SSH:                            ║'
-printf "║    ssh-cp1   → cp-1   (%s.10)              ║\n" "${HOST_ONLY_BASE}"
-printf "║    ssh-wk1   → wk-1   (%s.11)              ║\n" "${HOST_ONLY_BASE}"
-printf "║    ssh-wk2   → wk-2   (%s.12)              ║\n" "${HOST_ONLY_BASE}"
-printf "║    ssh-wk3   → wk-3   (%s.13)              ║\n" "${HOST_ONLY_BASE}"
-echo '║                                                         ║'
-echo '║  Ou diretamente:                                        ║'
-printf "║    ssh -i ~/.ssh/lab_key vagrant@%s.<N>    ║\n" "${HOST_ONLY_BASE}"
+echo '║  kubectl:   k  kgn  kgp                                  ║'
+echo '║                                                          ║'
+echo '║  SSH nos nodes (sem IP, sem senha):                      ║'
+echo '║    ssh cp-1   ssh wk-1   ssh wk-2   ssh wk-3             ║'
+echo '║                                                          ║'
+echo '║  Aliases úteis:                                          ║'
+echo '║    k         → kubectl                                   ║'
+echo '║    kgn       → kubectl get nodes                         ║'
+echo '║    kgp       → kubectl get pods -A                       ║'
+echo '║                                                          ║'
+echo '║  Conectar nos nodes via SSH:                             ║'
+printf "║    ssh-cp1   → cp-1   (%s.10)                    ║\n" "${HOST_ONLY_BASE}"
+printf "║    ssh-wk1   → wk-1   (%s.11)                    ║\n" "${HOST_ONLY_BASE}"
+printf "║    ssh-wk2   → wk-2   (%s.12)                    ║\n" "${HOST_ONLY_BASE}"
+printf "║    ssh-wk3   → wk-3   (%s.13)                    ║\n" "${HOST_ONLY_BASE}"
+echo '║                                                          ║'
+echo '║  Ou diretamente:                                         ║'
+printf "║    ssh -i ~/.ssh/lab_key vagrant@%s.<N>          ║\n" "${HOST_ONLY_BASE}"
 echo '╚══════════════════════════════════════════════════════════╝'
 printf '\033[0m\n'
 kubectl get nodes

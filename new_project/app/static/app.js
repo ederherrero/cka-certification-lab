@@ -213,6 +213,121 @@ function setButtonsDisabled(disabled) {
   });
 }
 
+// ── Cluster health ────────────────────────────────────────────────
+let clusterView      = false;
+let clusterTimer     = null;
+let clusterCountdown = 15;
+
+function toggleClusterView() {
+  clusterView = !clusterView;
+  document.getElementById('clusterNavBtn').classList.toggle('active', clusterView);
+  document.getElementById('clusterPanel').style.display = clusterView ? '' : 'none';
+
+  if (clusterView) {
+    document.getElementById('emptyState').style.display    = 'none';
+    document.getElementById('scenarioPanel').style.display = 'none';
+    refreshCluster();
+    startClusterTimer();
+  } else {
+    stopClusterTimer();
+    if (activeId) {
+      document.getElementById('scenarioPanel').style.display = '';
+    } else {
+      document.getElementById('emptyState').style.display = '';
+    }
+  }
+}
+
+async function refreshCluster() {
+  const spinner = document.getElementById('clusterSpinner');
+  spinner.style.display = 'inline-block';
+  clusterCountdown = 15;
+  document.getElementById('clusterRefreshInfo').textContent = '';
+  try {
+    const res  = await fetch('/api/cluster/health');
+    const data = await res.json();
+    renderClusterHealth(data);
+  } catch (_) {
+    renderClusterHealth({ status: 'unreachable', nodes: [], error: 'Sem conexão com o servidor.' });
+  }
+  spinner.style.display = 'none';
+}
+
+function renderClusterHealth(data) {
+  const statusBar  = document.getElementById('clusterStatusBar');
+  const statusText = document.getElementById('clusterStatusText');
+  const nodeGrid   = document.getElementById('nodeGrid');
+
+  const cfg = {
+    online:      { label: 'Cluster Online',           cls: 'status-online'   },
+    degraded:    { label: 'Cluster Degradado',         cls: 'status-degraded' },
+    offline:     { label: 'Cluster Offline',           cls: 'status-offline'  },
+    starting:    { label: 'Cluster Iniciando...',      cls: 'status-starting' },
+    unreachable: { label: 'API Indisponível',          cls: 'status-offline'  },
+  }[data.status] || { label: data.status, cls: 'status-offline' };
+
+  statusBar.className  = `cluster-status-bar ${cfg.cls}`;
+  statusText.textContent = cfg.label + (data.error ? ` — ${data.error}` : '');
+
+  nodeGrid.innerHTML = '';
+  data.nodes.forEach(node => {
+    const readyCls  = node.ready === 'True' ? 'node-ready' : node.ready === 'False' ? 'node-notready' : 'node-unknown';
+    const readyLbl  = node.ready === 'True' ? '● Ready'    : node.ready === 'False' ? '● NotReady'    : '● Unknown';
+    const card = document.createElement('div');
+    card.className = `node-card ${readyCls}`;
+    card.innerHTML = `
+      <div class="node-name">${escHtml(node.name)}</div>
+      <div class="node-role">${escHtml(node.role)}</div>
+      <div class="node-status">${readyLbl}</div>
+      <div class="node-version">${escHtml(node.version)}</div>
+    `;
+    nodeGrid.appendChild(card);
+  });
+}
+
+function startClusterTimer() {
+  stopClusterTimer();
+  clusterTimer = setInterval(() => {
+    clusterCountdown--;
+    const el = document.getElementById('clusterRefreshInfo');
+    if (el) el.textContent = `atualiza em ${clusterCountdown}s`;
+    if (clusterCountdown <= 0) refreshCluster();
+  }, 1000);
+}
+
+function stopClusterTimer() {
+  if (clusterTimer) { clearInterval(clusterTimer); clusterTimer = null; }
+}
+
+async function suspendCluster() {
+  if (!confirm('Isso irá desligar cp-1, wk-1, wk-2 e wk-3. Continuar?')) return;
+  const btn = document.getElementById('btnSuspend');
+  btn.disabled = true;
+  btn.textContent = '⏸ Suspendendo...';
+  try {
+    const res  = await fetch('/api/cluster/suspend', { method: 'POST' });
+    const data = await res.json();
+    const allOk = data.results.every(r => r.ok);
+    const bar  = document.getElementById('clusterStatusBar');
+    const txt  = document.getElementById('clusterStatusText');
+    if (allOk) {
+      btn.textContent = '✓ Nodes desligados';
+      bar.className   = 'cluster-status-bar status-offline';
+      txt.textContent = 'Nodes desligados. Agora feche o VirtualBox ou suspenda o manager.';
+      stopClusterTimer();
+      document.getElementById('clusterRefreshInfo').textContent = '';
+    } else {
+      const failed = data.results.filter(r => !r.ok).map(r => r.node).join(', ');
+      btn.textContent = '⏸ Suspender Nodes';
+      btn.disabled    = false;
+      txt.textContent = `Falhou em: ${failed}`;
+    }
+  } catch (_) {
+    btn.textContent = '⏸ Suspender Nodes';
+    btn.disabled    = false;
+  }
+}
+
 // ── Janela flutuante ──────────────────────────────────────────────
 let floatMin = false;
 let floatMax = false;
